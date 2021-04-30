@@ -1,0 +1,22 @@
+{
+  "frame_size"    : 800,
+  "shift_size"    : 400,
+  "window_type"   : "uniform",
+  "dilation"      : [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512],
+
+  "batch_size"    : 4,
+  "epochs"        : 10000,
+  "learning_rate" : 0.00001,
+  "default_float" : "float32",
+
+  "train_source_path" : "./dataset/p257_434.wav",
+  "train_target_path" : "",
+
+  "test_source_path"  : "./dataset/p257_434.wav",
+  "test_target_path"  : "",
+
+  "load_check_point_name" : "",
+  "save_check_point_name" : "convAE",
+  "save_check_point_period" : 10,
+  "plot_file" : "conv_AE.plot"
+}
