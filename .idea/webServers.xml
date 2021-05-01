@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="864e3a3c-2c17-4eba-b3b0-545f27e05cb3" name="YJC-LAB">
+        <fileTransfer rootFolder="/home/yjc" accessType="SFTP" host="223.194.33.88" port="12354" sshConfigId="69c0b6f1-3113-4547-b8ea-768c08815a85" sshConfig="yjc@223.194.33.88:12354 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+      <webServer id="4bf0bad2-2f23-4a25-ac64-336bdf526310" name="csp-server17">
+        <fileTransfer rootFolder="/home/csp-server17" accessType="SFTP" host="128.134.65.21" port="12354" sshConfigId="b5cdbb5c-309b-4d6b-aca2-606e6fa0a974" sshConfig="csp-server17@128.134.65.21:12354 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

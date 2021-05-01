@@ -1,22 +1,26 @@
 {
-  "frame_size"    : 800,
-  "shift_size"    : 400,
+  "previous_size" : 2200,
+  "frame_size"    : 1600,
+  "future_size"   : 2200,
+  "shift_size"    : 1600,
   "window_type"   : "uniform",
   "dilation"      : [1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512],
+  "condition"     : true,
+  "max_condition" : 4,
 
   "batch_size"    : 4,
   "epochs"        : 10000,
   "learning_rate" : 0.00001,
   "default_float" : "float32",
 
-  "train_source_path" : "./dataset/p257_434.wav",
-  "train_target_path" : "",
+  "train_source_path" : "./dataset/train/noise/train_woman_15min_cut_0.wav",
+  "train_target_path" : "./dataset/train/orig/train_woman_15min_cut_0.wav",
 
-  "test_source_path"  : "./dataset/p257_434.wav",
-  "test_target_path"  : "",
+  "test_source_path"  : "./dataset/test/noise",
+  "test_target_path"  : "./dataset/test/orig",
 
   "load_check_point_name" : "",
-  "save_check_point_name" : "convAE",
+  "save_check_point_name" : "DWC_22_16_22",
   "save_check_point_period" : 10,
-  "plot_file" : "conv_AE.plot"
+  "plot_file" : "DWC_22_16_22_4.plot"
 }

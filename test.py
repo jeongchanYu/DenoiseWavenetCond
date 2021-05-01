@@ -4,7 +4,7 @@ import os
 import custom_function as cf
 import wav
 import numpy as np
-import convolution_autoencoder as CAE
+import denoise_wavenet_condition as DWC
 import time
 import datetime
 import math

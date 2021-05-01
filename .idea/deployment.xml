@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="YJC-LAB" remoteFilesAllowedToDisappearOnAutoupload="false">
+    <serverData>
+      <paths name="YJC-LAB">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/PycharmProjects/DenoiseWavenetCond" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+      <paths name="csp-server17">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/DenoiseWavenetCond" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="PASSWORD" host="223.194.33.88" id="69c0b6f1-3113-4547-b8ea-768c08815a85" port="12354" nameFormat="DESCRIPTIVE" username="yjc" />
+      <sshConfig authType="PASSWORD" host="128.134.65.21" id="b5cdbb5c-309b-4d6b-aca2-606e6fa0a974" port="12354" nameFormat="DESCRIPTIVE" username="csp-server17" />
+    </configs>
+  </component>
+</project>
