@@ -13,8 +13,8 @@
   "learning_rate" : 0.00001,
   "default_float" : "float32",
 
-  "train_source_path" : "./dataset/train/noise/train_woman_15min_cut_0.wav",
-  "train_target_path" : "./dataset/train/orig/train_woman_15min_cut_0.wav",
+  "train_source_path" : "./dataset/train/noise",
+  "train_target_path" : "./dataset/train/orig",
 
   "test_source_path"  : "./dataset/test/noise",
   "test_target_path"  : "./dataset/test/orig",

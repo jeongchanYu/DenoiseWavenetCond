@@ -118,6 +118,10 @@ with strategy.scope():
     optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
     train_loss = tf.keras.metrics.Mean(name='train_loss')
 
+del(train_source_cut_list)
+del(train_source_condition_list)
+del(train_target_cut_list)
+del(window)
 
 # train function
 @tf.function
