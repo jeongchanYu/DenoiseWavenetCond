@@ -4,7 +4,7 @@ import os
 import custom_function as cf
 import wav
 import numpy as np
-import denoise_wavenet as DW
+import denoise_wavenet_condition as DWC
 import time
 import datetime
 import math
@@ -26,6 +26,7 @@ future_size = config["future_size"]
 shift_size = config["shift_size"]
 window_type = config["window_type"]
 dilation = config["dilation"]
+max_condition = config['max_condition']
 
 batch_size = config["batch_size"]
 epochs = config["epochs"]
@@ -41,9 +42,9 @@ save_check_point_period = config["save_check_point_period"]
 plot_file = config["plot_file"]
 
 
-# training_target_path is path or file?
-target_path_isdir = os.path.isdir(train_target_path)
+# train_target_path is path or file?
 source_path_isdir = os.path.isdir(train_source_path)
+target_path_isdir = os.path.isdir(train_target_path)
 if target_path_isdir != source_path_isdir:
     raise Exception("E: Target and source path is incorrect")
 if target_path_isdir:
@@ -59,6 +60,7 @@ else:
 # trim dataset
 train_source_cut_list = []
 train_target_cut_list = []
+train_source_condition_list = []
 number_of_total_frame = 0
 sample_rate_check = 0
 window = cf.window(window_type, frame_size+previous_size+future_size)
@@ -66,6 +68,9 @@ for i in range(len(train_source_file_list)):
     # read train data file
     source_signal, source_sample_rate = wav.read_wav(train_source_file_list[i])
     target_signal, target_sample_rate = wav.read_wav(train_target_file_list[i])
+    source_condition = int(train_source_file_list[i].split('_')[-1].replace(".wav", ""))
+    if source_condition > max_condition:
+        raise Exception("E : Source condition number is larger than max condition number")
 
     # different sample rate detect
     if source_sample_rate != target_sample_rate:
@@ -94,11 +99,19 @@ for i in range(len(train_source_file_list)):
             np_source_signal *= window
             train_source_cut_list.append(np_source_signal.tolist())
             train_target_cut_list.append(np_target_signal.tolist())
+            train_source_condition_list.append(tf.one_hot(source_condition, max_condition).numpy().tolist())
         else:
             np_source_signal = source_signal[j*shift_size:j*shift_size+frame_size+previous_size+future_size]
             np_target_signal = target_signal[j*shift_size:j*shift_size+frame_size+previous_size+future_size]
             train_source_cut_list.append(np_source_signal)
             train_target_cut_list.append(np_target_signal)
+            train_source_condition_list.append(tf.one_hot(source_condition, max_condition).numpy().tolist())
+
+
+del(train_source_cut_list)
+del(train_source_condition_list)
+del(train_target_cut_list)
+del(window)
 
 
 # multi gpu init
@@ -107,16 +120,17 @@ strategy = tf.distribute.MirroredStrategy()
 
 with strategy.scope():
     # make dataset
-    train_dataset = tf.data.Dataset.from_tensor_slices((train_source_cut_list, train_target_cut_list)).shuffle(number_of_total_frame).batch(batch_size)
+    train_dataset = tf.data.Dataset.from_tensor_slices((train_source_cut_list, train_source_condition_list, train_target_cut_list)).shuffle(number_of_total_frame).batch(batch_size)
     dist_dataset = strategy.experimental_distribute_dataset(dataset=train_dataset)
 
     # make model
-    model = DW.DenoiseWavenet(dilation)
+    model = DWC.DenoiseWavenetCondition(dilation, previous_size+frame_size+future_size)
     loss_object = tf.keras.losses.MeanAbsoluteError(reduction=tf.keras.losses.Reduction.NONE)
     optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
     train_loss = tf.keras.metrics.Mean(name='train_loss')
 
 del(train_source_cut_list)
+del(train_source_condition_list)
 del(train_target_cut_list)
 del(window)
 
@@ -124,12 +138,13 @@ del(window)
 @tf.function
 def train_step(dist_inputs):
     def step_fn(inputs):
-        x, y = inputs
+        x, cond, y = inputs
         x = tf.reshape(x, [-1, previous_size + frame_size + future_size, 1])
+        cond = tf.reshape(cond, [-1, max_condition])
         y = tf.reshape(y, [-1, previous_size + frame_size + future_size, 1])
 
         with tf.GradientTape() as tape:
-            y_pred = model(x)
+            y_pred = model(x, cond)
             mae = loss_object(tf.slice(y, [0, previous_size, 0], [-1, frame_size, -1]), tf.slice(y_pred, [0, previous_size, 0], [-1, frame_size, -1])) * 2
             if len(mae.shape) == 0:
                 mae = tf.reshape(mae, [1])
