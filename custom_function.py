@@ -131,7 +131,7 @@ def window(window_name, frame_size):
         elif window_name == 'hamming':
             sample = tf.signal.hamming_window(frame_size)
         elif window_name == 'uniform':
-            sample = tf.zeros(frame_size)
+            sample = tf.ones(frame_size)
         else:
             raise Exception('Select hanning or hamming')
 
