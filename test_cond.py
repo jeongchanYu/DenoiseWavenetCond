@@ -154,12 +154,14 @@ for i in range(len(test_source_file_list)):
             np_source_signal = np.array(source_signal[j * shift_size:j * shift_size + frame_size + previous_size + future_size])
             np_target_signal = np.array(target_signal[j * shift_size:j * shift_size + frame_size + previous_size + future_size])
             np_source_signal *= window
+            test_source_cut_index.append(j)
             test_source_cut_list.append(np_source_signal.tolist())
             test_target_cut_list.append(np_target_signal.tolist())
             test_source_condition_list.append(tf.one_hot(source_condition, max_condition).numpy().tolist())
         else:
             np_source_signal = source_signal[j*shift_size:j*shift_size+frame_size+previous_size+future_size]
             np_target_signal = target_signal[j*shift_size:j*shift_size+frame_size+previous_size+future_size]
+            test_source_cut_index.append(j)
             test_source_cut_list.append(np_source_signal)
             test_target_cut_list.append(np_target_signal)
             test_source_condition_list.append(tf.one_hot(source_condition, max_condition).numpy().tolist())
@@ -180,15 +182,15 @@ for i in range(len(test_source_file_list)):
         for inputs in dist_dataset:
             print("\rTest : {}, frame {}/{}".format(test_source_file_list[i].replace(test_source_path, ''), j+1, math.ceil(number_of_total_frame / batch_size)), end='')
             output_package_result, output_package_noise = test_step(inputs)
-            for k in len(output_package_result):
+            for k in range(len(output_package_result)):
                 output_dict_result.setdefault(output_package_result[k][0].numpy(), output_package_result[k][1].numpy().tolist())
                 output_dict_noise.setdefault(output_package_noise[k][0].numpy(), output_package_noise[k][1].numpy().tolist())
             j += 1
         output_dict_result = sorted(output_dict_result.items())
         output_dict_noise = sorted(output_dict_noise.items())
-        for k in len(output_dict_result):
-            result_value = output_dict_result.values()[k]
-            noise_value = output_dict_noise.values()[k]
+        for k in range(len(output_dict_result)):
+            result_value = output_dict_result[k][1]
+            noise_value = output_dict_noise[k][1]
             for l in range(len(result_value)):
                 output_list_result[shift_size*k+l] += result_value[l]
                 output_list_noise[shift_size*k+l] += noise_value[l]

@@ -108,12 +108,6 @@ for i in range(len(train_source_file_list)):
             train_source_condition_list.append(tf.one_hot(source_condition, max_condition).numpy().tolist())
 
 
-del(train_source_cut_list)
-del(train_source_condition_list)
-del(train_target_cut_list)
-del(window)
-
-
 # multi gpu init
 # strategy = tf.distribute.experimental.CentralStorageStrategy()
 strategy = tf.distribute.MirroredStrategy()
