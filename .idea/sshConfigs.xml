@@ -4,6 +4,7 @@
     <configs>
       <sshConfig authType="PASSWORD" host="223.194.33.88" id="69c0b6f1-3113-4547-b8ea-768c08815a85" port="12354" nameFormat="DESCRIPTIVE" username="yjc" />
       <sshConfig authType="PASSWORD" host="128.134.65.21" id="b5cdbb5c-309b-4d6b-aca2-606e6fa0a974" port="12354" nameFormat="DESCRIPTIVE" username="csp-server17" />
+      <sshConfig authType="PASSWORD" host="128.134.65.27" id="8d78c214-0fba-4fbb-bd08-4aa662ae28dc" port="5100" nameFormat="DESCRIPTIVE" username="la" />
     </configs>
   </component>
 </project>

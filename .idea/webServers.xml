@@ -16,6 +16,13 @@
           </advancedOptions>
         </fileTransfer>
       </webServer>
+      <webServer id="d0272801-7411-4144-aca9-bae31371ead1" name="Jawon-LAB">
+        <fileTransfer rootFolder="/home/la" accessType="SFTP" host="128.134.65.27" port="5100" sshConfigId="8d78c214-0fba-4fbb-bd08-4aa662ae28dc" sshConfig="la@128.134.65.27:5100 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
     </option>
   </component>
 </project>

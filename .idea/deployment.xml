@@ -2,6 +2,13 @@
 <project version="4">
   <component name="PublishConfigData" serverName="YJC-LAB" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
+      <paths name="Jawon-LAB">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/YJC/DWC" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
       <paths name="YJC-LAB">
         <serverdata>
           <mappings>
