@@ -167,7 +167,7 @@ with strategy.scope():
         train_loss.reset_states()
     else:
         cf.clear_plot_file('{}/{}'.format(cf.load_directory(), config['plot_file']))
-        cf.clear_csv_file('{}/{}'.format(cf.load_directory(), config['plot_file']).replace(".plot", "csv"))
+        cf.clear_csv_file('{}/{}'.format(cf.load_directory(), config['plot_file']).replace(".plot", ".csv"))
         saved_epoch = 0
 
     for epoch in range(saved_epoch, saved_epoch+epochs):
