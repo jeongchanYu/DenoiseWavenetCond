@@ -33,8 +33,8 @@ epochs = config["epochs"]
 learning_rate = config["learning_rate"]
 default_float = config["default_float"]
 
-test_source_path = config["train_source_path"]
-test_target_path = config["train_target_path"]
+test_source_path = config["test_source_path"]
+test_target_path = config["test_target_path"]
 
 load_check_point_name = config["load_check_point_name"]
 save_check_point_name = config["save_check_point_name"]
@@ -175,8 +175,8 @@ for i in range(len(test_source_file_list)):
         # test run
         output_dict_result = {}
         output_dict_noise = {}
-        output_list_result = [0]*source_signal.size
-        output_list_noise = [0]*source_signal.size
+        output_list_result = [0]*(source_signal.size-previous_size-future_size)
+        output_list_noise = [0]*(source_signal.size-previous_size-future_size)
         j = 0
         start = time.time()
         for inputs in dist_dataset:
@@ -201,8 +201,8 @@ for i in range(len(test_source_file_list)):
         file_name = os.path.basename(test_source_file_list[i])
         cf.createFolder(result_path)
         cf.createFolder(noise_path)
-        wav.write_wav(output_list_result[shift_size+previous_size:-(padding_size+future_size)], "{}/{}".format(result_path, file_name), sample_rate_check)
-        wav.write_wav(output_list_noise[shift_size+previous_size:-(padding_size+future_size)], "{}/{}".format(noise_path, file_name), sample_rate_check)
+        wav.write_wav(output_list_result[shift_size:-padding_size], "{}/{}".format(result_path, file_name), sample_rate_check)
+        wav.write_wav(output_list_noise[shift_size:-padding_size], "{}/{}".format(noise_path, file_name), sample_rate_check)
 
         print(" | loss : {}".format(test_loss.result()), " | Processing time :", datetime.timedelta(seconds=time.time() - start))
 

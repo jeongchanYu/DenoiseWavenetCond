@@ -32,8 +32,8 @@ epochs = config["epochs"]
 learning_rate = config["learning_rate"]
 default_float = config["default_float"]
 
-test_source_path = config["train_source_path"]
-test_target_path = config["train_target_path"]
+test_source_path = config["test_source_path"]
+test_target_path = config["test_target_path"]
 
 load_check_point_name = config["load_check_point_name"]
 save_check_point_name = config["save_check_point_name"]
