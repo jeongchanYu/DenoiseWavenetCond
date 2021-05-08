@@ -167,12 +167,16 @@ for i in range(len(test_source_file_list)):
         # test run
         output_dict_result = {}
         output_dict_noise = {}
-        output_list_result = [0]*source_signal.size
-        output_list_noise = [0]*source_signal.size
+        output_list_result = [0] * (source_signal.size - previous_size - future_size)
+        output_list_noise = [0] * (source_signal.size - previous_size - future_size)
         j = 0
         start = time.time()
         for inputs in dist_dataset:
-            print("\rTest : {}, frame {}/{}".format(test_source_file_list[i].replace(test_source_path, ''), j+1, math.ceil(number_of_total_frame / batch_size)), end='')
+            if target_path_isdir:
+                save_file_path = test_source_file_list[i].replace(test_source_path, '')
+            else:
+                save_file_path = os.path.basename(test_source_path)
+            print("\rTest : {}, frame {}/{}".format(save_file_path, j+1, math.ceil(number_of_total_frame / batch_size)), end='')
             output_package_result, output_package_noise = test_step(inputs)
             for k in range(len(output_package_result)):
                 output_dict_result.setdefault(output_package_result[k][0].numpy(), output_package_result[k][1].numpy().tolist())
@@ -187,14 +191,14 @@ for i in range(len(test_source_file_list)):
                 output_list_result[shift_size*k+l] += result_value[l]
                 output_list_noise[shift_size*k+l] += noise_value[l]
 
-        result_path = "{}/test_result/{}/result/{}".format(cf.load_directory(), load_check_point_name, os.path.dirname(test_source_file_list[i].replace(test_source_path, "")))
-        noise_path = "{}/test_result/{}/noise/{}".format(cf.load_directory(), load_check_point_name, os.path.dirname(test_source_file_list[i].replace(test_source_path, "")))
+        result_path = "{}/test_result/{}/result/{}".format(cf.load_directory(), load_check_point_name, save_file_path)
+        noise_path = "{}/test_result/{}/noise/{}".format(cf.load_directory(), load_check_point_name, save_file_path)
 
         file_name = os.path.basename(test_source_file_list[i])
         cf.createFolder(result_path)
         cf.createFolder(noise_path)
-        wav.write_wav(output_list_result[shift_size+previous_size:-(padding_size+future_size)], "{}/{}".format(result_path, file_name), sample_rate_check)
-        wav.write_wav(output_list_noise[shift_size+previous_size:-(padding_size+future_size)], "{}/{}".format(noise_path, file_name), sample_rate_check)
+        wav.write_wav(output_list_result[shift_size:-padding_size], "{}/{}".format(result_path, file_name), sample_rate_check)
+        wav.write_wav(output_list_noise[shift_size:-padding_size], "{}/{}".format(noise_path, file_name), sample_rate_check)
 
         print(" | loss : {}".format(test_loss.result()), " | Processing time :", datetime.timedelta(seconds=time.time() - start))
 

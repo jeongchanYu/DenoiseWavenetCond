@@ -120,13 +120,10 @@ def clear_plot_file(filename):
         pass
 
 
-# for WGP Server
 def write_csv_file(filename, index, value):
     """
-    This function is used for WGP Server.
-
     You can write plot file. But it will be override.
-    You can clear the file by using "clear_plot_file()" function.
+    You can clear the file by using "clear_csv_file()" function.
     """
     with open(filename, 'a') as f:
         f.write("{},{}\n".format(index, value))
@@ -134,9 +131,7 @@ def write_csv_file(filename, index, value):
 
 def clear_csv_file(filename):
     """
-    This function is used for WGP Server.
-
-    You can clear the plot file.
+    You can clear the csv file.
     """
     with open(filename, 'w') as f:
         pass
