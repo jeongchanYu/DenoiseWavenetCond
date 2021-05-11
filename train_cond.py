@@ -89,7 +89,7 @@ for i in range(len(train_source_file_list)):
     source_signal = np.pad(source_signal, (shift_size+previous_size, padding_size+future_size)).astype(default_float)
     target_signal = np.pad(target_signal, (shift_size+previous_size, padding_size+future_size)).astype(default_float)
     number_of_frame = (source_signal.size - (frame_size - shift_size) - shift_size - future_size)//(shift_size)
-    number_of_total_frame += number_of_frame
+    number_of_total_frame += number_of_frame *2
 
     # cut by frame
     for j in range(number_of_frame):
@@ -118,7 +118,7 @@ with strategy.scope():
     dist_dataset = strategy.experimental_distribute_dataset(dataset=train_dataset)
 
     # make model
-    model = DWC.DenoiseWavenetCondition(dilation, previous_size+frame_size+future_size)
+    model = DWC.DenoiseWavenetCondition(dilation, previous_size+frame_size+future_size, max_condition)
     loss_object = tf.keras.losses.MeanAbsoluteError(reduction=tf.keras.losses.Reduction.NONE)
     optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
     train_loss = tf.keras.metrics.Mean(name='train_loss')
@@ -134,7 +134,7 @@ def train_step(dist_inputs):
     def step_fn(inputs):
         x, cond, y = inputs
         x = tf.reshape(x, [-1, previous_size + frame_size + future_size, 1])
-        cond = tf.reshape(cond, [-1, max_condition])
+        cond = tf.reshape(cond, [-1, max_condition, 1])
         y = tf.reshape(y, [-1, previous_size + frame_size + future_size, 1])
 
         with tf.GradientTape() as tape:

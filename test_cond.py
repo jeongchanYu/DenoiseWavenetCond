@@ -172,6 +172,11 @@ for i in range(len(test_source_file_list)):
         test_dataset = tf.data.Dataset.from_tensor_slices((test_source_cut_index, test_source_cut_list, test_source_condition_list, test_target_cut_list)).batch(batch_size)
         dist_dataset = strategy.experimental_distribute_dataset(dataset=test_dataset)
 
+        del(test_source_cut_index)
+        del(test_source_cut_list)
+        del(test_source_condition_list)
+        del(test_target_cut_list)
+
         # test run
         output_dict_result = {}
         output_dict_noise = {}
@@ -181,7 +186,7 @@ for i in range(len(test_source_file_list)):
         start = time.time()
         for inputs in dist_dataset:
             if target_path_isdir:
-                save_file_path = test_source_file_list[i].replace(test_source_path, '')
+                save_file_path = test_source_file_list[i].replace(test_source_path, '').lstrip('\\/')
             else:
                 save_file_path = os.path.basename(test_source_path)
             print("\rTest : {}, frame {}/{}".format(save_file_path, j+1, math.ceil(number_of_total_frame / batch_size)), end='')
@@ -199,8 +204,8 @@ for i in range(len(test_source_file_list)):
                 output_list_result[shift_size*k+l] += result_value[l]
                 output_list_noise[shift_size*k+l] += noise_value[l]
 
-        result_path = "{}/test_result/{}/result/{}".format(cf.load_directory(), load_check_point_name, save_file_path)
-        noise_path = "{}/test_result/{}/noise/{}".format(cf.load_directory(), load_check_point_name, save_file_path)
+        result_path = "{}/test_result/{}/result/{}".format(cf.load_directory(), load_check_point_name, os.path.dirname(save_file_path))
+        noise_path = "{}/test_result/{}/noise/{}".format(cf.load_directory(), load_check_point_name, os.path.dirname(save_file_path))
 
         file_name = os.path.basename(test_source_file_list[i])
         cf.createFolder(result_path)
@@ -211,4 +216,7 @@ for i in range(len(test_source_file_list)):
         print(" | loss : {}".format(test_loss.result()), " | Processing time :", datetime.timedelta(seconds=time.time() - start))
 
         test_loss.reset_states()
-
+        del(output_dict_result)
+        del(output_dict_noise)
+        del(output_list_result)
+        del(output_list_noise)

@@ -15,11 +15,11 @@
   "train_source_path" : "./dataset/train/noise",
   "train_target_path" : "./dataset/train/orig",
 
-  "test_source_path"  : "./dataset/train/noise",
-  "test_target_path"  : "./dataset/train/orig",
+  "test_source_path"  : "./dataset/test/noise",
+  "test_target_path"  : "./dataset/test/orig",
 
-  "load_check_point_name" : "DWC_22_16_22_1",
+  "load_check_point_name" : "DWC_22_16_22_100",
   "save_check_point_name" : "DWC_22_16_22",
   "save_check_point_period" : 10,
-  "plot_file" : "DWC_22_16_22_4.plot"
+  "plot_file" : "DWC_22_16_22.plot"
 }
