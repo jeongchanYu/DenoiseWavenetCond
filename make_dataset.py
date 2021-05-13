@@ -8,7 +8,6 @@ def make_dataset(train_source_path, train_target_path, batch_size, previous_size
     if not shift_size:
         shift_size = frame_size
 
-
     # train_target_path is path or file?
     source_path_isdir = os.path.isdir(train_source_path)
     target_path_isdir = os.path.isdir(train_target_path)
@@ -57,7 +56,7 @@ def make_dataset(train_source_path, train_target_path, batch_size, previous_size
         source_signal = np.pad(source_signal, (shift_size+previous_size, padding_size+future_size)).astype(default_float)
         target_signal = np.pad(target_signal, (shift_size+previous_size, padding_size+future_size)).astype(default_float)
         number_of_frame = (source_signal.size - (frame_size - shift_size) - shift_size - future_size)//(shift_size)
-        number_of_total_frame += number_of_frame *2
+        number_of_total_frame += number_of_frame
 
         # cut by frame
         for j in range(number_of_frame):

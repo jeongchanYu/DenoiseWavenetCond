@@ -126,7 +126,7 @@ with strategy.scope():
         model.load_optimizer_state(optimizer, '{}/checkpoint/{}'.format(cf.load_directory(), load_check_point_name), 'optimizer')
         train_loss.reset_states()
         if early_stopping:
-            test_loss.reset_sates()
+            test_loss.reset_states()
     else:
         cf.clear_plot_file('{}/{}'.format(cf.load_directory(), config['plot_file']))
         cf.clear_csv_file('{}/{}'.format(cf.load_directory(), config['plot_file']).replace(".plot", ".csv"))
@@ -167,4 +167,4 @@ with strategy.scope():
 
         train_loss.reset_states()
         if early_stopping:
-            test_loss.reset_sates()
+            test_loss.reset_states()
