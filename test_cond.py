@@ -64,7 +64,7 @@ strategy = tf.distribute.MirroredStrategy()
 
 with strategy.scope():
     # make model
-    model = DWC.DenoiseWavenetCondition(dilation, previous_size+frame_size+future_size)
+    model = DWC.DenoiseWavenetCondition(dilation, previous_size+frame_size+future_size, max_condition)
     loss_object = tf.keras.losses.MeanAbsoluteError(reduction=tf.keras.losses.Reduction.NONE)
     test_loss = tf.keras.metrics.Mean(name='test_loss')
 
@@ -83,7 +83,7 @@ def test_step(dist_inputs):
     def step_fn(inputs):
         index, x, cond, y = inputs
         x = tf.reshape(x, [-1, previous_size + frame_size + future_size, 1])
-        cond = tf.reshape(cond, [-1, max_condition])
+        cond = tf.reshape(cond, [-1, max_condition, 1])
         y = tf.reshape(y, [-1, previous_size + frame_size + future_size, 1])
 
         with tf.GradientTape() as tape:
@@ -210,8 +210,8 @@ for i in range(len(test_source_file_list)):
         file_name = os.path.basename(test_source_file_list[i])
         cf.createFolder(result_path)
         cf.createFolder(noise_path)
-        wav.write_wav(output_list_result[shift_size:-padding_size], "{}/{}".format(result_path, file_name), sample_rate_check)
-        wav.write_wav(output_list_noise[shift_size:-padding_size], "{}/{}".format(noise_path, file_name), sample_rate_check)
+        wav.write_wav(output_list_result[shift_size:len(output_list_result)-padding_size], "{}/{}".format(result_path, file_name), sample_rate_check)
+        wav.write_wav(output_list_noise[shift_size:len(output_list_result)-padding_size], "{}/{}".format(noise_path, file_name), sample_rate_check)
 
         print(" | loss : {}".format(test_loss.result()), " | Processing time :", datetime.timedelta(seconds=time.time() - start))
 

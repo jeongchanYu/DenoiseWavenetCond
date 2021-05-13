@@ -158,7 +158,6 @@ for i in range(len(test_source_file_list)):
             test_source_cut_list.append(np_source_signal)
             test_target_cut_list.append(np_target_signal)
 
-
     with strategy.scope():
         # make dataset
         test_dataset = tf.data.Dataset.from_tensor_slices((test_source_cut_index, test_source_cut_list, test_target_cut_list)).batch(batch_size)
@@ -201,8 +200,8 @@ for i in range(len(test_source_file_list)):
         file_name = os.path.basename(test_source_file_list[i])
         cf.createFolder(result_path)
         cf.createFolder(noise_path)
-        wav.write_wav(output_list_result[shift_size:-padding_size], "{}/{}".format(result_path, file_name), sample_rate_check)
-        wav.write_wav(output_list_noise[shift_size:-padding_size], "{}/{}".format(noise_path, file_name), sample_rate_check)
+        wav.write_wav(output_list_result[shift_size:len(output_list_result)-padding_size], "{}/{}".format(result_path, file_name), sample_rate_check)
+        wav.write_wav(output_list_noise[shift_size:len(output_list_result)-padding_size], "{}/{}".format(noise_path, file_name), sample_rate_check)
 
         print(" | loss : {}".format(test_loss.result()), " | Processing time :", datetime.timedelta(seconds=time.time() - start))
 
