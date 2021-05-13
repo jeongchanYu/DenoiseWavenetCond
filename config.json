@@ -21,5 +21,6 @@
   "load_check_point_name" : "DWC_22_16_22_100",
   "save_check_point_name" : "DWC_22_16_22",
   "save_check_point_period" : 10,
+  "early_stopping" : true,
   "plot_file" : "DWC_22_16_22.plot"
 }

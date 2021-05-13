@@ -8,6 +8,7 @@ import denoise_wavenet as DW
 import time
 import datetime
 import math
+import make_dataset as md
 
 
 # tf version check
@@ -34,71 +35,19 @@ default_float = config["default_float"]
 
 train_source_path = config["train_source_path"]
 train_target_path = config["train_target_path"]
+test_source_path = config["test_source_path"]
+test_target_path = config["test_target_path"]
 
 load_check_point_name = config["load_check_point_name"]
 save_check_point_name = config["save_check_point_name"]
 save_check_point_period = config["save_check_point_period"]
+early_stopping = config["early_stopping"]
 plot_file = config["plot_file"]
 
 
-# training_target_path is path or file?
-target_path_isdir = os.path.isdir(train_target_path)
-source_path_isdir = os.path.isdir(train_source_path)
-if target_path_isdir != source_path_isdir:
-    raise Exception("E: Target and source path is incorrect")
-if target_path_isdir:
-    if not cf.compare_path_list(train_target_path, train_source_path, 'wav'):
-        raise Exception("E: Target and source file list is not same")
-    train_source_file_list = cf.read_path_list(train_source_path, "wav")
-    train_target_file_list = cf.read_path_list(train_target_path, "wav")
-else:
-    train_source_file_list = [train_source_path]
-    train_target_file_list = [train_target_path]
-
-
-# trim dataset
-train_source_cut_list = []
-train_target_cut_list = []
-number_of_total_frame = 0
-sample_rate_check = 0
-window = cf.window(window_type, frame_size+previous_size+future_size)
-for i in range(len(train_source_file_list)):
-    # read train data file
-    source_signal, source_sample_rate = wav.read_wav(train_source_file_list[i])
-    target_signal, target_sample_rate = wav.read_wav(train_target_file_list[i])
-
-    # different sample rate detect
-    if source_sample_rate != target_sample_rate:
-        raise Exception("E: Different sample rate detected. source({})/target({})".format(source_sample_rate, target_sample_rate))
-    if sample_rate_check == 0:
-        sample_rate_check = source_sample_rate
-    elif sample_rate_check != source_sample_rate:
-        raise Exception("E: Different sample rate detected. current({})/before({})".format(source_sample_rate, sample_rate_check))
-    elif sample_rate_check != target_sample_rate:
-        raise Exception("E: Different sample rate detected. current({})/before({})".format(source_sample_rate, target_sample_rate))
-
-    # padding
-    size_of_source = source_signal.size
-    padding_size = (shift_size - (size_of_source % shift_size)) % shift_size
-    padding_size += frame_size - shift_size
-    source_signal = np.pad(source_signal, (shift_size+previous_size, padding_size+future_size)).astype(default_float)
-    target_signal = np.pad(target_signal, (shift_size+previous_size, padding_size+future_size)).astype(default_float)
-    number_of_frame = (source_signal.size - (frame_size - shift_size) - shift_size - future_size)//(shift_size)
-    number_of_total_frame += number_of_frame
-
-    # cut by frame
-    for j in range(number_of_frame):
-        if window_type != "uniform":
-            np_source_signal = np.array(source_signal[j * shift_size:j * shift_size + frame_size + previous_size + future_size])
-            np_target_signal = np.array(target_signal[j * shift_size:j * shift_size + frame_size + previous_size + future_size])
-            np_source_signal *= window
-            train_source_cut_list.append(np_source_signal.tolist())
-            train_target_cut_list.append(np_target_signal.tolist())
-        else:
-            np_source_signal = source_signal[j*shift_size:j*shift_size+frame_size+previous_size+future_size]
-            np_target_signal = target_signal[j*shift_size:j*shift_size+frame_size+previous_size+future_size]
-            train_source_cut_list.append(np_source_signal)
-            train_target_cut_list.append(np_target_signal)
+train_dataset, number_of_total_frame_train = md.make_dataset(train_source_path, train_target_path, batch_size, previous_size, frame_size, future_size, shift_size, None, window_type, True)
+if early_stopping:
+    test_dataset, number_of_total_frame_test = md.make_dataset(test_source_path, test_target_path, batch_size, previous_size, frame_size, future_size, shift_size, None, window_type, True)
 
 
 # multi gpu init
@@ -107,18 +56,18 @@ strategy = tf.distribute.MirroredStrategy()
 
 with strategy.scope():
     # make dataset
-    train_dataset = tf.data.Dataset.from_tensor_slices((train_source_cut_list, train_target_cut_list)).shuffle(number_of_total_frame).batch(batch_size)
-    dist_dataset = strategy.experimental_distribute_dataset(dataset=train_dataset)
+    dist_dataset_train = strategy.experimental_distribute_dataset(dataset=train_dataset)
+    if early_stopping:
+        dist_dataset_test = strategy.experimental_distribute_dataset(dataset=test_dataset)
 
     # make model
     model = DW.DenoiseWavenet(dilation)
     loss_object = tf.keras.losses.MeanAbsoluteError(reduction=tf.keras.losses.Reduction.NONE)
     optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate'])
     train_loss = tf.keras.metrics.Mean(name='train_loss')
+    if early_stopping:
+        test_loss = tf.keras.metrics.Mean(name='test_loss')
 
-del(train_source_cut_list)
-del(train_target_cut_list)
-del(window)
 
 # train function
 @tf.function
@@ -144,28 +93,53 @@ def train_step(dist_inputs):
     mean_loss = strategy.reduce(tf.distribute.ReduceOp.SUM, per_example_losses, axis=0)
     train_loss(mean_loss/batch_size)
 
+# test function
+@tf.function
+def test_step(dist_inputs):
+    def step_fn(inputs):
+        x, y = inputs
+        x = tf.reshape(x, [-1, previous_size + frame_size + future_size, 1])
+        y = tf.reshape(y, [-1, previous_size + frame_size + future_size, 1])
+        y_pred = model(x)
+        mae = loss_object(tf.slice(y, [0, previous_size, 0], [-1, frame_size, -1]), tf.slice(y_pred, [0, previous_size, 0], [-1, frame_size, -1])) * 2
+        if len(mae.shape) == 0:
+            mae = tf.reshape(mae, [1])
+        loss = tf.reduce_sum(mae) * (1.0 / batch_size)
+        return mae
+    if tf_version[1] > 2:
+        per_example_losses = strategy.run(step_fn, args=(dist_inputs,))
+    else:
+        per_example_losses = strategy.experimental_run_v2(step_fn, args=(dist_inputs,))
+    mean_loss = strategy.reduce(tf.distribute.ReduceOp.SUM, per_example_losses, axis=0)
+    test_loss(mean_loss/batch_size)
+
 
 # train run
 with strategy.scope():
     # load model
     if load_check_point_name != "":
         saved_epoch = int(load_check_point_name.split('_')[-1])
-        for inputs in dist_dataset:
+        for inputs in dist_dataset_train:
             train_step(inputs)
             break
         model.load_weights('{}/checkpoint/{}/data.ckpt'.format(cf.load_directory(), load_check_point_name))
         model.load_optimizer_state(optimizer, '{}/checkpoint/{}'.format(cf.load_directory(), load_check_point_name), 'optimizer')
         train_loss.reset_states()
+        if early_stopping:
+            test_loss.reset_sates()
     else:
         cf.clear_plot_file('{}/{}'.format(cf.load_directory(), config['plot_file']))
         cf.clear_csv_file('{}/{}'.format(cf.load_directory(), config['plot_file']).replace(".plot", ".csv"))
+        if early_stopping:
+            cf.clear_plot_file('{}/{}'.format(cf.load_directory(), config['plot_file'].replace(".plot", "_test.plot")))
+            cf.clear_csv_file('{}/{}'.format(cf.load_directory(), config['plot_file']).replace(".plot", "._test.csv"))
         saved_epoch = 0
 
     for epoch in range(saved_epoch, saved_epoch+epochs):
         i = 0
         start = time.time()
-        for inputs in dist_dataset:
-            print("\rTrain : epoch {}/{}, training {}/{}".format(epoch + 1, saved_epoch+epochs, i + 1, math.ceil(number_of_total_frame / batch_size)), end='')
+        for inputs in dist_dataset_train:
+            print("\rTrain : epoch {}/{}, training {}/{}".format(epoch + 1, saved_epoch+epochs, i + 1, math.ceil(number_of_total_frame_train / batch_size)), end='')
             train_step(inputs)
             i += 1
         print(" | loss : {}".format(train_loss.result()), " | Processing time :", datetime.timedelta(seconds=time.time() - start))
@@ -175,9 +149,22 @@ with strategy.scope():
             model.save_weights('{}/checkpoint/{}_{}/data.ckpt'.format(cf.load_directory(), save_check_point_name, epoch+1))
             model.save_optimizer_state(optimizer, '{}/checkpoint/{}_{}'.format(cf.load_directory(), save_check_point_name, epoch + 1), 'optimizer')
 
+        if early_stopping:
+            i = 0
+            start = time.time()
+            for inputs in dist_dataset_test:
+                print("\rTest : epoch {}/{}, training {}/{}".format(epoch + 1, saved_epoch + epochs, i + 1, math.ceil(number_of_total_frame_test / batch_size)), end='')
+                test_step(inputs)
+                i += 1
+            print(" | loss : {}".format(test_loss.result()), " | Processing time :", datetime.timedelta(seconds=time.time() - start))
+
         # write plot file
         cf.write_plot_file('{}/{}'.format(cf.load_directory(), config['plot_file']), epoch+1, train_loss.result())
         cf.write_csv_file('{}/{}'.format(cf.load_directory(), config['plot_file'].replace(".plot", ".csv")), epoch+1, train_loss.result())
+        if early_stopping:
+            cf.write_plot_file('{}/{}'.format(cf.load_directory(), config['plot_file'].replace(".plot", "_test.plot")), epoch + 1, test_loss.result())
+            cf.write_csv_file('{}/{}'.format(cf.load_directory(), config['plot_file'].replace(".plot", "_test.csv")), epoch + 1, test_loss.result())
 
         train_loss.reset_states()
-
+        if early_stopping:
+            test_loss.reset_sates()
