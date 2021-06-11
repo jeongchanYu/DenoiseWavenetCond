@@ -64,6 +64,7 @@ def make_dataset(train_source_path, train_target_path, batch_size, previous_size
                 np_source_signal = np.array(source_signal[j * shift_size:j * shift_size + frame_size + previous_size + future_size])
                 np_target_signal = np.array(target_signal[j * shift_size:j * shift_size + frame_size + previous_size + future_size])
                 np_source_signal *= window
+                np_target_signal *= window
                 train_source_cut_list.append(np_source_signal.tolist())
                 train_target_cut_list.append(np_target_signal.tolist())
                 if max_condition:
